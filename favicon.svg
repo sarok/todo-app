@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="32" fill="#2d5016"/>
+
+  <!-- T-Rex body -->
+  <g fill="#7ab648">
+    <!-- Main body -->
+    <ellipse cx="34" cy="36" rx="12" ry="10" fill="#7ab648"/>
+
+    <!-- Tail -->
+    <path d="M46 40 Q54 38 58 44 Q54 42 48 43 Z" fill="#7ab648"/>
+
+    <!-- Neck -->
+    <path d="M28 28 Q26 22 28 18 Q32 16 34 20 Q32 26 30 30 Z" fill="#7ab648"/>
+
+    <!-- Head -->
+    <ellipse cx="26" cy="16" rx="9" ry="7" fill="#7ab648"/>
+
+    <!-- Snout -->
+    <path d="M17 14 Q13 16 14 20 Q18 18 22 17 Z" fill="#7ab648"/>
+
+    <!-- Upper jaw teeth -->
+    <path d="M14 19 L15 22 L17 19 L19 22 L21 19" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+
+    <!-- Eye -->
+    <circle cx="22" cy="13" r="2.5" fill="#fff"/>
+    <circle cx="22" cy="13" r="1.2" fill="#1a1a1a"/>
+    <circle cx="22.6" cy="12.4" r="0.4" fill="#fff"/>
+
+    <!-- Brow -->
+    <path d="M20 11 Q22 10 24 11" fill="none" stroke="#2d5016" stroke-width="1.2" stroke-linecap="round"/>
+
+    <!-- Tiny front arm -->
+    <path d="M30 32 Q27 34 26 37 Q28 36 30 35 Z" fill="#6aaa38"/>
+    <!-- Arm claws -->
+    <line x1="26" y1="37" x2="24" y2="39" stroke="#6aaa38" stroke-width="1" stroke-linecap="round"/>
+    <line x1="27" y1="37" x2="26" y2="40" stroke="#6aaa38" stroke-width="1" stroke-linecap="round"/>
+
+    <!-- Back leg -->
+    <path d="M38 44 Q38 50 36 54 Q38 54 40 52 Q41 49 40 46 Z" fill="#6aaa38"/>
+    <!-- Foot -->
+    <path d="M36 54 Q34 57 33 56 Q35 54 36 52 Z" fill="#6aaa38"/>
+    <path d="M40 52 Q41 56 39 57 Q40 54 40 52 Z" fill="#6aaa38"/>
+
+    <!-- Front leg -->
+    <path d="M32 44 Q31 50 30 53 Q32 53 33 51 Q34 48 33 45 Z" fill="#6aaa38"/>
+
+    <!-- Belly highlight -->
+    <ellipse cx="34" cy="37" rx="7" ry="6" fill="#a8d870" opacity="0.4"/>
+
+    <!-- Spots / scale detail -->
+    <circle cx="36" cy="32" r="1.2" fill="#6aaa38" opacity="0.6"/>
+    <circle cx="40" cy="34" r="1" fill="#6aaa38" opacity="0.6"/>
+    <circle cx="38" cy="38" r="1.2" fill="#6aaa38" opacity="0.6"/>
+  </g>
+</svg>
