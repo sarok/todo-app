@@ -208,6 +208,13 @@
       content.appendChild(textEl);
       if (meta.children.length > 0) content.appendChild(meta);
 
+      // Created date label
+      const createdEl = document.createElement('span');
+      createdEl.className = 'todo-created';
+      createdEl.textContent = todo.createdAt
+        ? new Date(todo.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+        : '';
+
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'todo-delete';
       deleteBtn.textContent = '✕';
@@ -216,6 +223,7 @@
 
       li.appendChild(checkbox);
       li.appendChild(content);
+      li.appendChild(createdEl);
       li.appendChild(deleteBtn);
       return li;
     }

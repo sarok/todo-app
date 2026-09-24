@@ -462,6 +462,14 @@ header h1::after {
 }
 
 /* ── Delete button ────────────────────────────────────────── */
+.todo-created {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  align-self: center;
+  padding-right: 0.25rem;
+  opacity: 0.7;
+}
 .todo-delete {
   background: transparent;
   border: none;
