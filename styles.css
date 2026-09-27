@@ -85,24 +85,29 @@ header h1 {
   display: inline-block;
 }
 
-/* Decorative underline accent */
-header h1::after {
-  content: '';
-  display: block;
-  height: 3px;
-  background: linear-gradient(90deg, var(--green-light), var(--brown-light));
-  border-radius: 2px;
-  margin-top: 6px;
-  width: 60%;
-  margin-left: auto;
-  margin-right: auto;
-}
-
 .subtitle {
   color: var(--text-muted);
   font-size: 0.92rem;
   margin-top: 0.6rem;
   font-style: italic;
+}
+
+/* ── Section Labels ───────────────────────────────────────── */
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  padding: 0.25rem 0.5rem;
+  border-left: 3px solid var(--green-mid);
+  background: linear-gradient(90deg, var(--green-mist), transparent);
+  border-radius: 0 4px 4px 0;
+}
+
+.section-label:nth-of-type(2) {
+  border-left-color: var(--brown-mid);
+  background: linear-gradient(90deg, var(--brown-cream), transparent);
 }
 
 /* ── Card shared ──────────────────────────────────────────── */

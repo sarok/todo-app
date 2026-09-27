@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Saro's To Do</title>
+  <title>All-In-All App</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="shortcut icon" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,10 +12,16 @@
 </head>
 <body>
   <div class="container">
+
     <header>
-      <h1>Saro's To Do</h1>
-      <p class="subtitle">Stay grounded. Get things done.</p>
+      <h1>All-In-All App</h1>
+      <p class="subtitle">Your tasks and home, all in one place.</p>
     </header>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 1 — TO DO
+    ════════════════════════════════════════════════════════ -->
+    <div class="section-label">Section 1 — To Do</div>
 
     <!-- Add Todo Form -->
     <section class="add-todo">
@@ -59,7 +65,7 @@
       </form>
     </section>
 
-    <!-- Filters -->
+    <!-- Filters bar -->
     <section class="filters">
       <div class="filter-group">
         <button class="filter-btn active" data-filter="all">All</button>
@@ -81,10 +87,22 @@
 
     <!-- Stats -->
     <div class="stats">
-      <span id="stats-text">0 tasks</span>
+      <span id="stats-text">No tasks yet</span>
     </div>
 
-    <!-- Home Filters Tracker -->
+    <!-- Todo List -->
+    <section class="todo-list-section">
+      <ul id="todo-list" aria-label="Todo list"></ul>
+      <div id="empty-state" class="empty-state" hidden>
+        <p>No tasks here. Add one above!</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 2 — FILTER TRACKER
+    ════════════════════════════════════════════════════════ -->
+    <div class="section-label">Section 2 — Filter Tracker</div>
+
     <section class="hf-section">
       <div class="hf-header">
         <div>
@@ -119,11 +137,11 @@
       <!-- Filter list -->
       <div id="hf-list"></div>
       <div id="hf-empty" class="hf-empty" hidden>
-        <p>No filters yet. Add one above!</p>
+        <p>No filters tracked yet. Add one above!</p>
       </div>
     </section>
 
-  </div>
+  </div><!-- /.container -->
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -142,11 +160,12 @@
     };
 
     const firebaseApp = initializeApp(firebaseConfig);
-    const db = getFirestore(firebaseApp);
-    const todosCol = collection(db, "todos");
+    const db          = getFirestore(firebaseApp);
+    const todosCol    = collection(db, "todos");
 
-    let todos = [];
-    let activeFilter = 'all';
+    // ── Section 1: To Do ──────────────────────────────────────
+    let todos               = [];
+    let activeFilter        = 'all';
     let activeCategoryFilter = '';
 
     const form           = document.getElementById('todo-form');
@@ -163,7 +182,7 @@
 
     function getDueStatus(dueDate) {
       if (!dueDate) return null;
-      const today = new Date(); today.setHours(0,0,0,0);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
       const due = new Date(dueDate + 'T00:00:00');
       if (due < today) return 'overdue';
       if (due.getTime() === today.getTime()) return 'due-today';
@@ -181,17 +200,17 @@
       return todos.filter(todo => {
         const matchesStatus =
           activeFilter === 'all' ||
-          (activeFilter === 'active' && !todo.completed) ||
-          (activeFilter === 'completed' && todo.completed);
+          (activeFilter === 'active'    && !todo.completed) ||
+          (activeFilter === 'completed' &&  todo.completed);
         const matchesCategory = !activeCategoryFilter || todo.category === activeCategoryFilter;
         return matchesStatus && matchesCategory;
       });
     }
 
-    function render() {
+    function renderTodos() {
       const filtered = getFilteredTodos();
       todoList.innerHTML = '';
-      emptyState.hidden = filtered.length > 0;
+      emptyState.hidden  = filtered.length > 0;
       filtered.forEach(todo => todoList.appendChild(buildTodoItem(todo)));
       updateStats();
     }
@@ -201,17 +220,17 @@
       li.className = 'todo-item' + (todo.completed ? ' completed' : '');
 
       const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
+      checkbox.type  = 'checkbox';
       checkbox.className = 'todo-checkbox';
-      checkbox.checked = todo.completed;
+      checkbox.checked   = todo.completed;
       checkbox.setAttribute('aria-label', `Mark "${todo.text}" as ${todo.completed ? 'incomplete' : 'complete'}`);
       checkbox.addEventListener('change', () => toggleTodo(todo.id, todo.completed));
 
-      const content = document.createElement('div');
+      const content  = document.createElement('div');
       content.className = 'todo-content';
 
-      const textEl = document.createElement('span');
-      textEl.className = 'todo-text';
+      const textEl   = document.createElement('span');
+      textEl.className  = 'todo-text';
       textEl.textContent = todo.text;
 
       const meta = document.createElement('div');
@@ -219,13 +238,13 @@
 
       if (todo.category) {
         const b = document.createElement('span');
-        b.className = 'badge badge-category';
+        b.className   = 'badge badge-category';
         b.textContent = todo.category;
         meta.appendChild(b);
       }
       if (todo.priority && todo.priority !== 'normal') {
         const b = document.createElement('span');
-        b.className = `badge badge-priority-${todo.priority}`;
+        b.className   = `badge badge-priority-${todo.priority}`;
         b.textContent = todo.priority + ' priority';
         meta.appendChild(b);
       }
@@ -233,8 +252,10 @@
         const status = getDueStatus(todo.dueDate);
         const b = document.createElement('span');
         b.className = 'badge badge-due' +
-          (status === 'overdue' ? ' overdue' : status === 'due-today' ? ' due-today' : '');
-        const label = status === 'overdue' ? '⚠ Overdue · ' : status === 'due-today' ? '⏰ Today · ' : '📅 ';
+          (status === 'overdue'   ? ' overdue'   :
+           status === 'due-today' ? ' due-today' : '');
+        const label = status === 'overdue'   ? '⚠ Overdue · ' :
+                      status === 'due-today' ? '⏰ Today · '   : '📅 ';
         b.textContent = label + formatDueDate(todo.dueDate);
         meta.appendChild(b);
       }
@@ -242,15 +263,14 @@
       content.appendChild(textEl);
       if (meta.children.length > 0) content.appendChild(meta);
 
-      // Created date label
       const createdEl = document.createElement('span');
-      createdEl.className = 'todo-created';
+      createdEl.className   = 'todo-created';
       createdEl.textContent = todo.createdAt
         ? new Date(todo.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
         : '';
 
       const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'todo-delete';
+      deleteBtn.className   = 'todo-delete';
       deleteBtn.textContent = '✕';
       deleteBtn.setAttribute('aria-label', `Delete "${todo.text}"`);
       deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
@@ -263,7 +283,7 @@
     }
 
     function updateStats() {
-      const total = todos.length;
+      const total     = todos.length;
       const completed = todos.filter(t => t.completed).length;
       statsText.textContent = total === 0
         ? 'No tasks yet'
@@ -293,14 +313,14 @@
       await Promise.all(completed.map(t => deleteDoc(doc(db, "todos", t.id))));
     }
 
-    // Real-time listener — syncs across all devices instantly
-    const q = query(todosCol, orderBy("createdAt", "desc"));
-    onSnapshot(q, (snapshot) => {
+    // Real-time listener for todos
+    const todosQuery = query(todosCol, orderBy("createdAt", "desc"));
+    onSnapshot(todosQuery, snapshot => {
       todos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      render();
+      renderTodos();
     });
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       const text = todoInput.value.trim();
       if (!text) return;
@@ -318,38 +338,35 @@
         filterBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         activeFilter = btn.dataset.filter;
-        render();
+        renderTodos();
       });
     });
 
     categoryFilter.addEventListener('change', () => {
       activeCategoryFilter = categoryFilter.value;
-      render();
+      renderTodos();
     });
 
     clearCompleted.addEventListener('click', clearCompletedTodos);
 
-    // ── Home Filter Tracker ────────────────────────────────
-    const hfCol       = collection(db, "homeFilters");
-    const hfAddBtn    = document.getElementById('hf-add-btn');
-    const hfFormWrap  = document.getElementById('hf-form-wrap');
-    const hfNameInput = document.getElementById('hf-name');
-    const hfLastInput = document.getElementById('hf-last-changed');
+    // ── Section 2: Filter Tracker ─────────────────────────────
+    const hfCol           = collection(db, "homeFilters");
+    const hfAddBtn        = document.getElementById('hf-add-btn');
+    const hfFormWrap      = document.getElementById('hf-form-wrap');
+    const hfNameInput     = document.getElementById('hf-name');
+    const hfLastInput     = document.getElementById('hf-last-changed');
     const hfIntervalInput = document.getElementById('hf-interval');
-    const hfSaveBtn   = document.getElementById('hf-save-btn');
-    const hfCancelBtn = document.getElementById('hf-cancel-btn');
-    const hfList      = document.getElementById('hf-list');
-    const hfEmpty     = document.getElementById('hf-empty');
+    const hfSaveBtn       = document.getElementById('hf-save-btn');
+    const hfCancelBtn     = document.getElementById('hf-cancel-btn');
+    const hfList          = document.getElementById('hf-list');
+    const hfEmpty         = document.getElementById('hf-empty');
 
-    let homeFilters   = [];
-    let editingHfId   = null; // null = adding new, string = editing existing
+    let homeFilters = [];
+    let editingHfId = null;
 
-    // Show / hide the add form
     hfAddBtn.addEventListener('click', () => {
       editingHfId = null;
-      hfNameInput.value = '';
-      hfLastInput.value = '';
-      hfIntervalInput.value = '';
+      hfNameInput.value = ''; hfLastInput.value = ''; hfIntervalInput.value = '';
       hfSaveBtn.textContent = 'Save Filter';
       hfFormWrap.hidden = false;
       hfNameInput.focus();
@@ -368,8 +385,7 @@
         alert('Please fill in all three fields.');
         return;
       }
-      hfSaveBtn.disabled = true;
-      hfSaveBtn.textContent = 'Saving…';
+      hfSaveBtn.disabled = true; hfSaveBtn.textContent = 'Saving…';
       if (editingHfId) {
         await updateDoc(doc(db, "homeFilters", editingHfId), { name, lastChanged: lastDate, intervalMonths: interval });
       } else {
@@ -377,32 +393,25 @@
       }
       hfFormWrap.hidden = true;
       editingHfId = null;
-      hfSaveBtn.disabled = false;
-      hfSaveBtn.textContent = 'Save Filter';
+      hfSaveBtn.disabled = false; hfSaveBtn.textContent = 'Save Filter';
     });
 
-    // Compute next change date and status
-    function getFilterStatus(lastChanged, intervalMonths) {
+    function getHfStatus(lastChanged, intervalMonths) {
       const last = new Date(lastChanged + 'T00:00:00');
       const next = new Date(last);
       next.setMonth(next.getMonth() + intervalMonths);
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      const diffMs   = next - today;
-      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      const today   = new Date(); today.setHours(0, 0, 0, 0);
+      const diffDays = Math.ceil((next - today) / (1000 * 60 * 60 * 24));
       return { next, diffDays };
     }
 
     function renderHomeFilters() {
       hfList.innerHTML = '';
-      if (homeFilters.length === 0) {
-        hfEmpty.hidden = false;
-        return;
-      }
+      if (homeFilters.length === 0) { hfEmpty.hidden = false; return; }
       hfEmpty.hidden = true;
 
       homeFilters.forEach(hf => {
-        const { next, diffDays } = getFilterStatus(hf.lastChanged, hf.intervalMonths);
-
+        const { next, diffDays } = getHfStatus(hf.lastChanged, hf.intervalMonths);
         let statusClass = 'hf-status-ok';
         let statusText  = `Due in ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
         if (diffDays <= 0) {
@@ -455,10 +464,11 @@
 
     // Real-time listener for home filters
     const hfQuery = query(hfCol, orderBy("createdAt", "asc"));
-    onSnapshot(hfQuery, (snapshot) => {
+    onSnapshot(hfQuery, snapshot => {
       homeFilters = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       renderHomeFilters();
     });
+
   </script>
 </body>
 </html>
