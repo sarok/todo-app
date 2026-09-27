@@ -84,13 +84,45 @@
       <span id="stats-text">0 tasks</span>
     </div>
 
-    <!-- Todo List -->
-    <section class="todo-list-section">
-      <ul id="todo-list" aria-label="Todo list"></ul>
-      <div id="empty-state" class="empty-state" hidden>
-        <p>No tasks here. Add one above!</p>
+    <!-- Home Filters Tracker -->
+    <section class="hf-section">
+      <div class="hf-header">
+        <div>
+          <h2 class="hf-title">🏠 Home Filter Tracker</h2>
+          <p class="hf-subtitle">Track when your home filters need changing</p>
+        </div>
+        <button id="hf-add-btn">+ Add Filter</button>
+      </div>
+
+      <!-- Add / Edit Form (hidden by default) -->
+      <div id="hf-form-wrap" class="hf-form-wrap" hidden>
+        <div class="hf-form-row">
+          <div class="form-group">
+            <label for="hf-name">Filter Name</label>
+            <input type="text" id="hf-name" placeholder="e.g. HVAC, Water, Range Hood" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label for="hf-last-changed">Last Changed</label>
+            <input type="date" id="hf-last-changed" />
+          </div>
+          <div class="form-group">
+            <label for="hf-interval">Change Every (months)</label>
+            <input type="number" id="hf-interval" min="1" max="24" placeholder="e.g. 3" />
+          </div>
+        </div>
+        <div class="hf-form-actions">
+          <button id="hf-save-btn">Save Filter</button>
+          <button id="hf-cancel-btn" class="hf-cancel">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Filter list -->
+      <div id="hf-list"></div>
+      <div id="hf-empty" class="hf-empty" hidden>
+        <p>No filters yet. Add one above!</p>
       </div>
     </section>
+
   </div>
 
   <script type="module">
@@ -296,6 +328,137 @@
     });
 
     clearCompleted.addEventListener('click', clearCompletedTodos);
+
+    // ── Home Filter Tracker ────────────────────────────────
+    const hfCol       = collection(db, "homeFilters");
+    const hfAddBtn    = document.getElementById('hf-add-btn');
+    const hfFormWrap  = document.getElementById('hf-form-wrap');
+    const hfNameInput = document.getElementById('hf-name');
+    const hfLastInput = document.getElementById('hf-last-changed');
+    const hfIntervalInput = document.getElementById('hf-interval');
+    const hfSaveBtn   = document.getElementById('hf-save-btn');
+    const hfCancelBtn = document.getElementById('hf-cancel-btn');
+    const hfList      = document.getElementById('hf-list');
+    const hfEmpty     = document.getElementById('hf-empty');
+
+    let homeFilters   = [];
+    let editingHfId   = null; // null = adding new, string = editing existing
+
+    // Show / hide the add form
+    hfAddBtn.addEventListener('click', () => {
+      editingHfId = null;
+      hfNameInput.value = '';
+      hfLastInput.value = '';
+      hfIntervalInput.value = '';
+      hfSaveBtn.textContent = 'Save Filter';
+      hfFormWrap.hidden = false;
+      hfNameInput.focus();
+    });
+
+    hfCancelBtn.addEventListener('click', () => {
+      hfFormWrap.hidden = true;
+      editingHfId = null;
+    });
+
+    hfSaveBtn.addEventListener('click', async () => {
+      const name     = hfNameInput.value.trim();
+      const lastDate = hfLastInput.value;
+      const interval = parseInt(hfIntervalInput.value);
+      if (!name || !lastDate || !interval || interval < 1) {
+        alert('Please fill in all three fields.');
+        return;
+      }
+      hfSaveBtn.disabled = true;
+      hfSaveBtn.textContent = 'Saving…';
+      if (editingHfId) {
+        await updateDoc(doc(db, "homeFilters", editingHfId), { name, lastChanged: lastDate, intervalMonths: interval });
+      } else {
+        await addDoc(hfCol, { name, lastChanged: lastDate, intervalMonths: interval, createdAt: Date.now() });
+      }
+      hfFormWrap.hidden = true;
+      editingHfId = null;
+      hfSaveBtn.disabled = false;
+      hfSaveBtn.textContent = 'Save Filter';
+    });
+
+    // Compute next change date and status
+    function getFilterStatus(lastChanged, intervalMonths) {
+      const last = new Date(lastChanged + 'T00:00:00');
+      const next = new Date(last);
+      next.setMonth(next.getMonth() + intervalMonths);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const diffMs   = next - today;
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      return { next, diffDays };
+    }
+
+    function renderHomeFilters() {
+      hfList.innerHTML = '';
+      if (homeFilters.length === 0) {
+        hfEmpty.hidden = false;
+        return;
+      }
+      hfEmpty.hidden = true;
+
+      homeFilters.forEach(hf => {
+        const { next, diffDays } = getFilterStatus(hf.lastChanged, hf.intervalMonths);
+
+        let statusClass = 'hf-status-ok';
+        let statusText  = `Due in ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+        if (diffDays <= 0) {
+          statusClass = 'hf-status-overdue';
+          statusText  = diffDays === 0 ? '⚠ Due today!' : `⚠ Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? 's' : ''}`;
+        } else if (diffDays <= 14) {
+          statusClass = 'hf-status-soon';
+          statusText  = `⏰ Due soon — ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'hf-card';
+        card.innerHTML = `
+          <div class="hf-card-left">
+            <div class="hf-card-name">${hf.name}</div>
+            <div class="hf-card-meta">
+              <span>Last changed: <strong>${new Date(hf.lastChanged + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</strong></span>
+              <span>·</span>
+              <span>Every <strong>${hf.intervalMonths} month${hf.intervalMonths !== 1 ? 's' : ''}</strong></span>
+              <span>·</span>
+              <span>Next: <strong>${next.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</strong></span>
+            </div>
+          </div>
+          <div class="hf-card-right">
+            <span class="hf-status ${statusClass}">${statusText}</span>
+            <div class="hf-actions">
+              <button class="hf-edit-btn" aria-label="Edit ${hf.name}">✎</button>
+              <button class="hf-delete-btn" aria-label="Delete ${hf.name}">✕</button>
+            </div>
+          </div>`;
+
+        card.querySelector('.hf-edit-btn').addEventListener('click', () => {
+          editingHfId = hf.id;
+          hfNameInput.value = hf.name;
+          hfLastInput.value = hf.lastChanged;
+          hfIntervalInput.value = hf.intervalMonths;
+          hfSaveBtn.textContent = 'Update Filter';
+          hfFormWrap.hidden = false;
+          hfNameInput.focus();
+        });
+
+        card.querySelector('.hf-delete-btn').addEventListener('click', async () => {
+          if (!confirm(`Delete "${hf.name}"?`)) return;
+          await deleteDoc(doc(db, "homeFilters", hf.id));
+        });
+
+        hfList.appendChild(card);
+      });
+    }
+
+    // Real-time listener for home filters
+    const hfQuery = query(hfCol, orderBy("createdAt", "asc"));
+    onSnapshot(hfQuery, (snapshot) => {
+      homeFilters = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderHomeFilters();
+    });
   </script>
 </body>
 </html>
